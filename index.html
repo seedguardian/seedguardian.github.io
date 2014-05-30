@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<!-- seedguardian - by Mathieu Gorichon - released under MIT License -->
+<html lang="en">
+<head>
+    <title>Seed Guardian</title>
+    <script type="text/javascript" src="lib/js/angular.js"></script>
+    <script type="text/javascript" src="lib/js/secrets.js"></script>    
+    <script type="text/javascript" src="lib/js/mnemonic.js"></script> 
+    <script type="text/javascript" src="humanizer.js"></script> 
+
+    <script type="text/javascript" src="seedguardian.js"></script> 
+    <link href="lib/css/bootstrap.css" rel="stylesheet" media="screen">
+    <link href="seedguardian.css" rel="stylesheet" media="screen">
+</head>
+
+<body ng-app>
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">Seed Guardian (Alpha)</a>
+        </div>
+    </nav>
+
+    <div class="container" id="main">
+        <h1>Electrum Seed Guardian <small>Never lose your bitcoins</small></h1>
+        <p>This software uses Shamir's Secret Sharing Scheme to securely store your electrum seed. Hexadecimal shares are humanized using electrum algorithm, so each share is encoded as a sequence of 15 words.</p>
+
+        <div class="alert alert-warning">This software has just started development, please use with care.</div>
+            <div class="panel panel-default" ng-controller="SplitCtrl">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Split Electrum Seed</h3>
+                </div>
+                <div class="panel-body">
+
+                    <form name="splitform" class="form-horizontal" method="get" onSubmit="return false;">
+                        <fieldset>
+                            <div class="form-group" ng-class="{'has-error': splitform.seed.$error.pattern}">
+                                <label class="col-lg-2 control-label">Electrum Seed</label>
+                                <div class="col-lg-10">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <input type="text" name="seed" ng-pattern="/^(\S*\s){11}\S*$/" ng-model="seed" class="form-control" placeholder="Leave empty to create a new Electrum wallet">
+                                            <span ng-show="splitform.seed.$error.pattern">Seed is made of exactly 12 words.</span>
+                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group" ng-class="{'has-error': splitform.sharesnumber.$error.min || splitform.sharesnumber.$error.max}">
+                                <label class="col-lg-2 control-label">Number of Shares</label>
+                                <div class="col-lg-10">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <input type="number" name="sharesnumber" min="2" max="64" ng-model="sharesNumber" class="form-control" placeholder=""/>
+                                            <span ng-show="splitform.sharesnumber.$error.min || splitform.sharesnumber.$error.max">The value must be in range 2 to 64.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group" ng-class="{'has-error': splitform.threshold.$error.min || splitform.threshold.$error.max}">
+                                <label class="col-lg-2 control-label">Threshold</label>
+                                <div class="col-lg-10">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <input type="number" name="threshold" min="2" max="64" ng-model="threshold" class="form-control" placeholder="">
+                                            <span ng-show="splitform.threshold.$error.min || splitform.threshold.$error.max">The value must be in range 2 to 64.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group" title="">
+                                <div class="col-lg-2"></div>
+                                <div class="col-lg-10">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <input ng-click="init()" class="btn btn-default" type="button" value="Reset"/>
+                                            <input ng-click="split()" class="btn btn-primary" type="button" value="Split Seed"/>
+                                        </div>
+                                    </div>             
+                                </div>
+                            </div>
+                            <div class="alert alert-danger" ng-show="showError">{{errorMessage}}</div>
+                            <div class="form-group" ng-show="showShares" title="">
+                                <label class="col-lg-2 control-label">Shares</label>
+                                <div class="col-lg-10">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <div class="well well-sm" ng-repeat="share in sharesHuman" ng-animate="'animate'">{{share}}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+            </div> <!-- panel -->
+
+            <div class="panel panel-default" ng-controller="ReconstructCtrl">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Reconstruct Electrum Seed</h3>
+                </div>
+                <div class="panel-body">
+
+                    <form name="reconstructform" class="form-horizontal" method="get" onSubmit="return false;">
+                        <fieldset>
+                            <div ng-class="{'has-error': reconstructform.share.$error.pattern}" ng-repeat="(index, share) in humanShares" class="form-group" title="">
+                                <label class="col-lg-2 control-label">Share {{$index + 1}}</label>
+                                <div class="col-lg-10">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <input type="text" name="share" ng-pattern="/^(\S*\s){14}\S*$/" ng-model="humanShares[index]" ng-change="onChange()" class="form-control" placeholder="Enter the share 15 words">
+                                            <span ng-show="reconstructform.share.$error.pattern">Share is made of exactly 15 words.</span>
+                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" title="">
+                                <div class="col-lg-2"></div>
+                                <div class="col-lg-10">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <input ng-click="init()" class="btn btn-default" type="button" value="Reset"/>
+                                            <input ng-click="reconstruct()" class="btn btn-primary" type="button" value="Reconstruct Seed"/>
+                                            <!-- <input ng-click="addShare()" class="btn btn-success" type="button" value="Add Share">
+                                            <input ng-click="removeShare()" class="btn btn-danger" type="button" value="Remove Share"> -->
+                                        </div>
+                                    </div>             
+                                </div>
+                            </div>
+                            <div class="alert alert-danger" ng-show="showError">{{errorMessage}}</div>
+                            <div class="form-group" ng-show="showSeed" title="">
+                                <label class="col-lg-2 control-label">Electrum Seed</label>
+                                <div class="col-lg-10">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <div class="well well-sm">{{humanSeed}}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+            </div> <!-- panel -->
+
+        <footer>
+            <p>The contents of this page are released under the <a href="http://opensource.org/licenses/mit-license.php">MIT License</a>.<br>Donations are gratefully accepted at <a href="bitcoin:15zvrQeY3jPmqQGUPYZBRVfmfBy5Deo7FA">15zvrQeY3jPmqQGUPYZBRVfmfBy5Deo7FA</a>
+                <span class="pull-right">Powered by <a href="http://pages.github.com">GitHub Pages</a> &nbsp;
+                     <a href="https://github.com/MathieuGorichon/SeedGuardian">GitHub Repository</a> &nbsp; 
+                </span>
+            </p>
+        </footer>
+    </div> <!-- container -->
+
+</body>
+</html>
