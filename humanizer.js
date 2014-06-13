@@ -94,7 +94,7 @@ var humanizer = (function () {
         }
 
         // Combine shares
-        var newSeedHex = secrets.combine(sharesHex.slice(0,2));
+        var newSeedHex = secrets.combine(sharesHex);
         console.log('Hex seed: ' + newSeedHex);
 
         // Convert back to human readable seed
