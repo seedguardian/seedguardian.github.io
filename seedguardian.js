@@ -6,12 +6,12 @@ var SplitCtrl = function ($scope) {
 
         // Generate a new seed if empty
         if ($scope.seed === '') {
-            $scope.seedHex = secrets.random(128);
-            $scope.seed = mn_encode($scope.seedHex); 
+            $scope.seed = secrets.random(128);
+            $scope.humanSeed = mn_encode($scope.seed); 
         }            
         
         try {
-            $scope.sharesHuman = humanizer.split($scope.seed, $scope.sharesNumber, $scope.threshold);
+            $scope.humanShares = humanizer.split($scope.seed, $scope.sharesNumber, $scope.threshold);
             // Display shares
             $scope.showShares = true;
         } catch(error) {
@@ -26,9 +26,21 @@ var SplitCtrl = function ($scope) {
         $scope.showError = false;
         $scope.errorMessage = '';
 
+        $scope.walletType = 'electrum';
         $scope.sharesNumber = 3;
         $scope.threshold = 2;
+        
+        // Seed is the random number used to generate all keys. 
+        // Called seed in electrum (128bits) and root key in armory (256 bits)
+        // here represented in a string in hexadecimal
         $scope.seed = '';
+        
+        // Human seed is the human-readable version of the seed,
+        // Called seed in electrum, chain code in armory
+        $scope.humanSeed = '';
+        
+        // Human version of the shares
+        $scope.humanShares = '';
     }
 
     $scope.init();

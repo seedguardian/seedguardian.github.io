@@ -59,11 +59,8 @@ var humanizer = (function () {
     }
        
     module.split = function (seed, sharesCount, threshold) {
-        // Converts seed to 4-byte aligned string
-        var seedHex = mn_decode(seed);
-
         // Share the seed
-        var shares = secrets.share(seedHex, sharesCount, threshold)
+        var shares = secrets.share(seed, sharesCount, threshold)
 
         // Add prefix at the beginning of each share
         for (var i = 0; i < shares.length; i += 1) {
