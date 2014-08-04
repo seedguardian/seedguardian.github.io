@@ -5,10 +5,12 @@ var SplitCtrl = function ($scope) {
         $scope.showError = false;
 
         // Generate a new seed if empty
-        if ($scope.seed === '') {
+        if ($scope.humanSeed === '') {
             $scope.seed = secrets.random(128);
             $scope.humanSeed = mn_encode($scope.seed); 
-        }            
+        } else {
+            $scope.seed = mn_decode($scope.humanSeed);
+        }
         
         try {
             $scope.humanShares = humanizer.split($scope.seed, $scope.sharesNumber, $scope.threshold);
