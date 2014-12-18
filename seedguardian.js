@@ -51,6 +51,7 @@ var SplitCtrl = function ($scope) {
 var ReconstructCtrl = function ($scope) {
     $scope.onChange = function() {
         // If field is empty, remove all shares but first one.
+        console.log($scope.humanShares);
         if (!$scope.humanShares[1]) {
             $scope.humanShares = {1: ''};
         }
